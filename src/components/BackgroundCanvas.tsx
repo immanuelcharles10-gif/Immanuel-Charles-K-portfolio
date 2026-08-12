@@ -162,19 +162,27 @@ export default function BackgroundCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const resizeCanvas = () => {
+    let lastWidth = window.innerWidth;
+
+    const resizeCanvas = (isForce = false) => {
       if (!canvas) return;
+      // On mobile phones, ignore vertical height changes from address bar hiding/showing during scroll
+      if (!isForce && isTouchDevice && Math.abs(window.innerWidth - lastWidth) < 10 && canvas.width > 0) {
+        return;
+      }
       canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      // Use maximum screen height on touch devices to lock canvas height across mobile address bar toggles
+      canvas.height = isTouchDevice ? Math.max(window.innerHeight, window.screen.height) : window.innerHeight;
+      lastWidth = window.innerWidth;
       lastRenderedFrameRef.current = -1;
       render(true);
     };
 
-    resizeCanvas();
+    resizeCanvas(true);
 
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      resizeCanvas();
+      resizeCanvas(false);
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
         if (!isTouchDevice) {
@@ -184,13 +192,13 @@ export default function BackgroundCanvas() {
     };
 
     window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", handleResize);
+    window.addEventListener("orientationchange", () => resizeCanvas(true));
 
     // Skip heavy GSAP ScrollTrigger on touch/smartphone screens to guarantee 100% smooth scrolling
     if (isTouchDevice) {
       return () => {
         window.removeEventListener("resize", handleResize);
-        window.removeEventListener("orientationchange", handleResize);
+        window.removeEventListener("orientationchange", () => resizeCanvas(true));
       };
     }
 
