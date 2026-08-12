@@ -68,16 +68,6 @@ export default function BackgroundCanvas() {
 
   // Image Preloading (once on mount)
   useEffect(() => {
-    const isTouchDevice =
-      typeof window !== "undefined" &&
-      (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
-
-    if (isTouchDevice) {
-      (window as any).__bgLoaded = true;
-      window.dispatchEvent(new CustomEvent("bgCanvasLoaded"));
-      return;
-    }
-
     const currentFrame = (index: number) =>
       `/background-frames/frame_${(index + 1).toString().padStart(3, "0")}.png`;
 
@@ -135,12 +125,6 @@ export default function BackgroundCanvas() {
 
   // Setup / Re-setup GSAP ScrollTrigger & canvas sizing whenever route or window resizes
   useEffect(() => {
-    const isTouchDevice =
-      typeof window !== "undefined" &&
-      (navigator.maxTouchPoints > 0 || window.matchMedia("(pointer: coarse)").matches);
-
-    if (isTouchDevice) return;
-
     gsap.registerPlugin(ScrollTrigger);
 
     const canvas = canvasRef.current;
