@@ -68,10 +68,38 @@ export default function BackgroundCanvas() {
 
   // Image Preloading (once on mount)
   useEffect(() => {
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      (navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth <= 768);
+
     const currentFrame = (index: number) =>
       `/background-frames/frame_${(index + 1).toString().padStart(3, "0")}.png`;
 
     let isCancelled = false;
+
+    if (isTouchDevice) {
+      // On smartphones: load ONLY frame_001.png as a crisp static background
+      const img = new Image();
+      img.src = currentFrame(0);
+      img.onload = () => {
+        if (isCancelled) return;
+        imagesRef.current[0] = img;
+        (window as any).__bgLoaded = true;
+        render(true);
+        window.dispatchEvent(new CustomEvent("bgCanvasLoaded"));
+      };
+      img.onerror = () => {
+        (window as any).__bgLoaded = true;
+        window.dispatchEvent(new CustomEvent("bgCanvasLoaded"));
+      };
+      return () => {
+        isCancelled = true;
+      };
+    }
+
+    // On Desktop PC: batch preload all 142 video frames for smooth scroll animation
     let loadedCount = 0;
 
     const loadFrame = (index: number): Promise<HTMLImageElement> => {
@@ -125,7 +153,11 @@ export default function BackgroundCanvas() {
 
   // Setup / Re-setup GSAP ScrollTrigger & canvas sizing whenever route or window resizes
   useEffect(() => {
-    gsap.registerPlugin(ScrollTrigger);
+    const isTouchDevice =
+      typeof window !== "undefined" &&
+      (navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth <= 768);
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -145,12 +177,24 @@ export default function BackgroundCanvas() {
       resizeCanvas();
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        ScrollTrigger.refresh();
+        if (!isTouchDevice) {
+          ScrollTrigger.refresh();
+        }
       }, 150);
     };
 
     window.addEventListener("resize", handleResize);
     window.addEventListener("orientationchange", handleResize);
+
+    // Skip heavy GSAP ScrollTrigger on touch/smartphone screens to guarantee 100% smooth scrolling
+    if (isTouchDevice) {
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        window.removeEventListener("orientationchange", handleResize);
+      };
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
 
     // Clean up existing tween/trigger if any
     if (tweenRef.current) {
