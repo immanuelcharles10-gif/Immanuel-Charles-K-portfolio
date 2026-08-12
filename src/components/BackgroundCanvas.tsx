@@ -80,9 +80,9 @@ export default function BackgroundCanvas() {
     let isCancelled = false;
 
     if (isTouchDevice) {
-      // On smartphones: load ONLY frame_001.png as a crisp static background
+      // On smartphones: load background_for_smart_phones.png as a crisp static background
       const img = new Image();
-      img.src = currentFrame(0);
+      img.src = "/background_for_smart_phones.png";
       img.onload = () => {
         if (isCancelled) return;
         imagesRef.current[0] = img;
