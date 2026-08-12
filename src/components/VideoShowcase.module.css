@@ -1,0 +1,124 @@
+.section {
+  padding: 8rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 10;
+}
+
+.heading {
+  font-size: clamp(2.2rem, 5vw, 5rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 4rem;
+  letter-spacing: -0.04em;
+}
+
+.videoWrapper {
+  width: 100%;
+  max-width: 1200px;
+  aspect-ratio: 16 / 9;
+  background-color: var(--surface-primary);
+  border-radius: 24px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border-color);
+  transition: transform 0.5s var(--ease-out-expo);
+  cursor: pointer;
+}
+
+.videoWrapper:hover {
+  transform: scale(1.02);
+}
+
+.video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.playButton {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  transition: all 0.3s var(--ease-out-expo);
+  pointer-events: none;
+  opacity: 1;
+}
+
+.videoWrapper:hover .playButton {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%) scale(1.1);
+}
+
+.hidden {
+  opacity: 0 !important;
+}
+
+.controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.videoWrapper:hover .controls {
+  opacity: 1;
+}
+
+/* Always show controls on touch devices */
+@media (pointer: coarse) {
+  .controls {
+    opacity: 1;
+  }
+}
+
+.controlBtn {
+  color: var(--text-primary);
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+
+.controlBtn:hover {
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .section {
+    padding: 4rem 1.25rem;
+  }
+
+  .heading {
+    margin-bottom: 2.5rem;
+    font-size: clamp(1.8rem, 7vw, 3.5rem);
+  }
+
+  .videoWrapper {
+    border-radius: 16px;
+  }
+
+  .playButton {
+    width: 56px;
+    height: 56px;
+  }
+}
