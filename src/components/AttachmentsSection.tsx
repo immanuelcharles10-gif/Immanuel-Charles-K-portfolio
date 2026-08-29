@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Key, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react";
 import styles from "./AttachmentsSection.module.css";
-import { verifyVaultPassword } from "@/app/actions/vaultAuth";
 
 export default function AttachmentsSection() {
   const [password, setPassword] = useState("");
@@ -19,22 +18,31 @@ export default function AttachmentsSection() {
     setError(false);
     setIsLoading(true);
     
-    const isValid = await verifyVaultPassword(password.trim());
-    
-    if (isValid) {
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("trigger_attachments_loader", "true");
-      }
-      // Unlock the Lenis scroll before navigating so the main page can scroll on return
-      setTimeout(() => {
+    try {
+      const res = await fetch("/api/vault-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: password.trim() }),
+      });
+      const data = await res.json();
+      
+      if (data.success) {
         if (typeof window !== "undefined") {
-          document.body.style.overflow = "";
-          const lenis = (window as any).__lenis;
-          if (lenis) lenis.start();
+          sessionStorage.setItem("trigger_attachments_loader", "true");
         }
-        router.push("/attachments");
-      }, 600);
-    } else {
+        setTimeout(() => {
+          if (typeof window !== "undefined") {
+            document.body.style.overflow = "";
+            const lenis = (window as any).__lenis;
+            if (lenis) lenis.start();
+          }
+          router.push("/attachments");
+        }, 600);
+      } else {
+        setError(true);
+        setIsLoading(false);
+      }
+    } catch {
       setError(true);
       setIsLoading(false);
     }
