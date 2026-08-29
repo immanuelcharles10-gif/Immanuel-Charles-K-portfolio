@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   // Check if trying to access attachments route
   if (request.nextUrl.pathname.startsWith('/attachments')) {
     const vaultSession = request.cookies.get('vault_session');
