@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Key, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react";
 import styles from "./AttachmentsSection.module.css";
+import { verifyVaultPassword } from "@/app/actions/vaultAuth";
 
 export default function AttachmentsSection() {
   const [password, setPassword] = useState("");
@@ -11,15 +12,17 @@ export default function AttachmentsSection() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) return;
 
-    if (password.trim() === "hmpixel") {
-      setError(false);
-      setIsLoading(true);
+    setError(false);
+    setIsLoading(true);
+    
+    const isValid = await verifyVaultPassword(password.trim());
+    
+    if (isValid) {
       if (typeof window !== "undefined") {
-        sessionStorage.setItem("attachments_unlocked", "true");
         sessionStorage.setItem("trigger_attachments_loader", "true");
       }
       // Unlock the Lenis scroll before navigating so the main page can scroll on return
@@ -33,6 +36,7 @@ export default function AttachmentsSection() {
       }, 600);
     } else {
       setError(true);
+      setIsLoading(false);
     }
   };
 

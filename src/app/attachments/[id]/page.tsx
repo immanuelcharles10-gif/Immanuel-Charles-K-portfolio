@@ -102,13 +102,6 @@ export default function RepositoryViewPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Check authorization
-    const unlocked = sessionStorage.getItem("attachments_unlocked") === "true";
-    if (!unlocked) {
-      router.replace("/#attachments");
-      return;
-    }
-
     // Load items from IndexedDB / localStorage vault
     loadVaultItems().then((list) => {
       if (list && Array.isArray(list)) {

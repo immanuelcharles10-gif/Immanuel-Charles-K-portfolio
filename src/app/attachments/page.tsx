@@ -27,7 +27,7 @@ import gsap from "gsap";
 import ScrollTrigger from "gsap/ScrollTrigger";
 import styles from "./attachments.module.css";
 
-import { subscribeVaultItems, addVaultItem, deleteVaultItem, uploadFileToStorage } from "@/utils/attachmentStorage";
+import { loadVaultItems, addVaultItem, deleteVaultItem, uploadFileToStorage } from "@/utils/attachmentStorage";
 
 export interface FileEntry {
   fileName: string;
@@ -139,14 +139,14 @@ export default function AttachmentsPage() {
     };
   }, []);
 
-  // Load items from Firestore on mount and subscribe for real-time updates
+  const fetchItems = useCallback(async () => {
+    const firestoreItems = await loadVaultItems();
+    setItems(firestoreItems);
+  }, []);
+
+  // Load items from Firestore on mount
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const unlocked = sessionStorage.getItem("attachments_unlocked") === "true";
-    if (!unlocked) {
-      router.replace("/#attachments");
-      return;
-    }
     setIsUnlocked(true);
 
     const triggered = sessionStorage.getItem("trigger_attachments_loader") === "true";
@@ -154,10 +154,7 @@ export default function AttachmentsPage() {
       sessionStorage.removeItem("trigger_attachments_loader");
     }
 
-    // Subscribe to real-time Firestore updates
-    const unsubscribe = subscribeVaultItems((firestoreItems) => {
-      setItems(firestoreItems);
-    });
+    fetchItems();
 
     // Smooth preloader loading animation
     let curr = 0;
@@ -175,9 +172,8 @@ export default function AttachmentsPage() {
 
     return () => {
       clearInterval(timer);
-      unsubscribe();
     };
-  }, [router]);
+  }, [fetchItems]);
 
   const makeTimestamp = () => {
     const now = new Date();
@@ -201,6 +197,7 @@ export default function AttachmentsPage() {
       ...makeTimestamp(),
     };
     await addVaultItem(newItem);
+    await fetchItems();
     setNoteTitle("");
     setNoteContent("");
     closeExpandedEditor();
@@ -237,7 +234,9 @@ export default function AttachmentsPage() {
     try {
       // Upload all files to Firebase Storage in parallel
       const uploadPromises = stagedFiles.map(async (file): Promise<FileEntry> => {
-        const downloadUrl = await uploadFileToStorage(file, bundleId);
+        const formData = new FormData();
+        formData.append("file", file);
+        const downloadUrl = await uploadFileToStorage(formData, bundleId);
         return {
           fileName: file.name,
           fileSize:
@@ -270,6 +269,7 @@ export default function AttachmentsPage() {
       };
 
       await addVaultItem(bundleItem);
+      await fetchItems();
       setStagedFiles([]);
     } catch (err) {
       console.error("Publish failed:", err);
@@ -285,7 +285,7 @@ export default function AttachmentsPage() {
 
     setTimeout(async () => {
       await deleteVaultItem(id);
-      // Local state is updated automatically by the Firestore onSnapshot subscription
+      await fetchItems();
       setDeletingIds((prev) => prev.filter((item) => item !== id));
     }, 500);
   };
