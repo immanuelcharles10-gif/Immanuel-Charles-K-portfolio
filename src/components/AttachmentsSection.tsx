@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Key, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react";
 import styles from "./AttachmentsSection.module.css";
@@ -11,9 +11,27 @@ export default function AttachmentsSection() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  // Reset verification state on mount and when restored from browser back-forward cache (bfcache)
+  useEffect(() => {
+    setIsLoading(false);
+    setPassword("");
+    setError(false);
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      setIsLoading(false);
+      setPassword("");
+      setError(false);
+    };
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => {
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) return;
+    if (!password || isLoading) return;
 
     setError(false);
     setIsLoading(true);
@@ -32,6 +50,8 @@ export default function AttachmentsSection() {
           document.body.style.overflow = "";
           const lenis = (window as any).__lenis;
           if (lenis) lenis.start();
+          // Reset loading state right before navigating so bfcache snapshot is never stuck
+          setIsLoading(false);
           window.location.href = "/attachments";
         }
       } else {
