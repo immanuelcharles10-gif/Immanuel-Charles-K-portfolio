@@ -62,9 +62,9 @@ export default function Hero() {
       {/* Top: text content */}
       <div className={styles.heroGrid}>
         <div className={styles.leftCol}>
-          <div className={styles.greetingTag}>
-            <span>Creative Technologist</span>
-          </div>
+          <p className={styles.greetingTag}>
+            Creative Technologist
+          </p>
 
           <h1 className={styles.title}>
             <span className={styles.line}>
