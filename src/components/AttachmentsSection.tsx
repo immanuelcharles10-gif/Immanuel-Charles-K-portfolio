@@ -29,15 +29,11 @@ export default function AttachmentsSection() {
       if (data.success) {
         if (typeof window !== "undefined") {
           sessionStorage.setItem("trigger_attachments_loader", "true");
+          document.body.style.overflow = "";
+          const lenis = (window as any).__lenis;
+          if (lenis) lenis.start();
+          window.location.href = "/attachments";
         }
-        setTimeout(() => {
-          if (typeof window !== "undefined") {
-            document.body.style.overflow = "";
-            const lenis = (window as any).__lenis;
-            if (lenis) lenis.start();
-          }
-          router.push("/attachments");
-        }, 600);
       } else {
         setError(true);
         setIsLoading(false);
