@@ -47,15 +47,9 @@ export default function BackgroundCanvas() {
 
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
-    const isTouch =
-      typeof window !== "undefined" &&
-      (navigator.maxTouchPoints > 0 ||
-        window.matchMedia("(pointer: coarse)").matches ||
-        window.innerWidth <= 768);
-
     const hRatio = canvas.width / img.width;
     const vRatio = canvas.height / img.height;
-    const zoomFactor = isTouch ? 1.0 : 1.35;
+    const zoomFactor = 1.35;
     const ratio = Math.max(hRatio, vRatio) * zoomFactor;
 
     const centerShift_x = (canvas.width - img.width * ratio) / 2;
@@ -168,44 +162,48 @@ export default function BackgroundCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    let lastWidth = window.innerWidth;
-
-    const resizeCanvas = (isForce = false) => {
-      if (!canvas) return;
-      // On mobile phones, ignore vertical height changes from address bar hiding/showing during scroll
-      if (!isForce && isTouchDevice && Math.abs(window.innerWidth - lastWidth) < 10 && canvas.width > 0) {
-        return;
-      }
+    // Touch/Mobile devices: Lock canvas dimensions on mount and do NOTHING on scroll/resize
+    if (isTouchDevice) {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      lastWidth = window.innerWidth;
+      render(true);
+
+      const handleOrientation = () => {
+        setTimeout(() => {
+          if (!canvas) return;
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          render(true);
+        }, 200);
+      };
+
+      window.addEventListener("orientationchange", handleOrientation);
+      return () => {
+        window.removeEventListener("orientationchange", handleOrientation);
+      };
+    }
+
+    // Desktop PC: Dynamic resize & GSAP ScrollTrigger
+    const resizeCanvas = () => {
+      if (!canvas) return;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
       lastRenderedFrameRef.current = -1;
       render(true);
     };
 
-    resizeCanvas(true);
+    resizeCanvas();
 
     let resizeTimeout: NodeJS.Timeout;
     const handleResize = () => {
-      resizeCanvas(false);
+      resizeCanvas();
       clearTimeout(resizeTimeout);
       resizeTimeout = setTimeout(() => {
-        if (!isTouchDevice) {
-          ScrollTrigger.refresh();
-        }
+        ScrollTrigger.refresh();
       }, 150);
     };
 
     window.addEventListener("resize", handleResize);
-    window.addEventListener("orientationchange", () => resizeCanvas(true));
-
-    // Skip heavy GSAP ScrollTrigger on touch/smartphone screens to guarantee 100% smooth scrolling
-    if (isTouchDevice) {
-      return () => {
-        window.removeEventListener("resize", handleResize);
-        window.removeEventListener("orientationchange", () => resizeCanvas(true));
-      };
-    }
 
     gsap.registerPlugin(ScrollTrigger);
 
@@ -241,7 +239,6 @@ export default function BackgroundCanvas() {
 
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.removeEventListener("orientationchange", handleResize);
       clearTimeout(resizeTimeout);
       clearTimeout(refreshTimer);
 
