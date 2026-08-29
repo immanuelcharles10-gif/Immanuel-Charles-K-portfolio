@@ -47,9 +47,15 @@ export default function BackgroundCanvas() {
 
     if (!img || !img.complete || img.naturalWidth === 0) return;
 
+    const isTouch =
+      typeof window !== "undefined" &&
+      (navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth <= 768);
+
     const hRatio = canvas.width / img.width;
     const vRatio = canvas.height / img.height;
-    const zoomFactor = 1.35;
+    const zoomFactor = isTouch ? 1.0 : 1.35;
     const ratio = Math.max(hRatio, vRatio) * zoomFactor;
 
     const centerShift_x = (canvas.width - img.width * ratio) / 2;
@@ -171,8 +177,7 @@ export default function BackgroundCanvas() {
         return;
       }
       canvas.width = window.innerWidth;
-      // Use maximum screen height on touch devices to lock canvas height across mobile address bar toggles
-      canvas.height = isTouchDevice ? Math.max(window.innerHeight, window.screen.height) : window.innerHeight;
+      canvas.height = window.innerHeight;
       lastWidth = window.innerWidth;
       lastRenderedFrameRef.current = -1;
       render(true);
@@ -257,11 +262,15 @@ export default function BackgroundCanvas() {
         position: "fixed",
         top: 0,
         left: 0,
-        width: "100vw",
-        height: "100lvh",
-        minHeight: "-webkit-fill-available",
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%",
         zIndex: 0,
         pointerEvents: "none",
+        transform: "translate3d(0, 0, 0)",
+        WebkitTransform: "translate3d(0, 0, 0)",
+        willChange: "transform",
       }}
     />
   );
