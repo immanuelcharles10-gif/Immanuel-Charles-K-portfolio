@@ -31,12 +31,30 @@
   --ease-apple: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
-* {
+*,
+*::before,
+*::after,
+html,
+body,
+a,
+button,
+input,
+textarea,
+select,
+label,
+iframe,
+video,
+svg,
+[role="button"],
+[data-cursor] {
   box-sizing: border-box;
+  /* Completely hide native mouse cursor everywhere */
+  cursor: none !important; 
+}
+
+* {
   padding: 0;
   margin: 0;
-  /* Disable default custom cursor for non-interactive elements */
-  cursor: none; 
 }
 
 html {
@@ -58,7 +76,19 @@ body {
 
 /* Touch devices: Re-enable default cursor */
 @media (pointer: coarse) {
-  * {
+  *,
+  *::before,
+  *::after,
+  html,
+  body,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  label,
+  [role="button"],
+  [data-cursor] {
     cursor: auto !important;
   }
 }
