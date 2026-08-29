@@ -63,7 +63,6 @@ export default function Hero() {
       <div className={styles.heroGrid}>
         <div className={styles.leftCol}>
           <div className={styles.greetingTag}>
-            <span className={styles.dot} />
             <span>Creative Technologist</span>
           </div>
 
